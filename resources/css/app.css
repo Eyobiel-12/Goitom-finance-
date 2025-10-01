@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur shadow-card rounded-xl;
+  }
+  .section-gradient {
+    background-image: radial-gradient(40% 60% at 10% 10%, rgba(220,38,38,0.08), transparent 60%),
+      radial-gradient(50% 50% at 90% 10%, rgba(15,23,42,0.06), transparent 60%);
+  }
+  .focus-visible-ring:focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-neutral-900;
+  }
+  .heading-1 { @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight; }
+  .heading-2 { @apply text-2xl sm:text-3xl lg:text-4xl font-semibold tracking-tight; }
+  .heading-3 { @apply text-xl sm:text-2xl font-semibold; }
+}
+
+@layer components {
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-brand-600 focus:text-white focus:rounded-md focus:shadow-card;
+  }
+}

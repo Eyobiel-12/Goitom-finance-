@@ -17,7 +17,21 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetLocale::class,
         ]);
 
-        //
+        // Security middleware
+        $middleware->alias([
+            'rate.limit' => \App\Http\Middleware\RateLimitMiddleware::class,
+            'audit.log' => \App\Http\Middleware\AuditLogMiddleware::class,
+        ]);
+
+        // Apply rate limiting to sensitive routes
+        $middleware->group('api', [
+            'rate.limit',
+        ]);
+
+        // Apply audit logging to financial operations
+        $middleware->group('financial', [
+            'audit.log',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

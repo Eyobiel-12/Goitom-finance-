@@ -1,22 +1,30 @@
 <script setup>
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { Link } from '@inertiajs/vue3';
+import Header from '@/Components/Header.vue';
+import Container from '@/Components/Container.vue';
+import ThemeToggle from '@/Components/ThemeToggle.vue';
 </script>
 
 <template>
-    <div
-        class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0"
-    >
-        <div>
-            <Link href="/">
-                <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />
-            </Link>
-        </div>
+    <div class="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 dark:from-neutral-950 dark:via-neutral-950 dark:to-neutral-900">
+        <Header>
+            <template #logo>
+                <Link href="/" class="flex items-center gap-2">
+                    <img src="/logo.png" alt="Logo" class="h-6 w-auto sm:h-7 md:h-8" />
+                </Link>
+            </template>
+            <template #actions>
+                <ThemeToggle />
+            </template>
+        </Header>
 
-        <div
-            class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg"
-        >
-            <slot />
-        </div>
+        <Container>
+            <div class="flex min-h-[70vh] items-center justify-center py-12">
+                <div class="w-full max-w-md rounded-xl border border-gray-100 bg-white p-6 shadow-card sm:p-8 dark:border-neutral-800 dark:bg-neutral-900">
+                    <slot />
+                </div>
+            </div>
+        </Container>
     </div>
 </template>

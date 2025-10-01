@@ -7,6 +7,10 @@ namespace App\Http\Controllers;
 use App\Models\Invoice;
 use App\Models\Client;
 use App\Models\Project;
+use App\Http\Requests\StoreInvoiceRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
+use App\Services\InvoiceService;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -19,6 +23,11 @@ use Illuminate\Support\Facades\Mail;
 final class InvoiceController extends Controller
 {
     use AuthorizesRequests;
+
+    public function __construct(
+        private readonly InvoiceService $invoiceService,
+        private readonly DashboardService $dashboardService
+    ) {}
     public function index(Request $request): Response
     {
         $invoices = Invoice::where('user_id', $request->user()->id)
@@ -49,63 +58,12 @@ final class InvoiceController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreInvoiceRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after:issue_date',
-            'items' => 'required|array|min:1',
-            'items.*.description' => 'required|string|max:255',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'notes' => 'nullable|string',
-            'terms' => 'nullable|string',
-        ]);
-
-        // Generate invoice number
-        $lastInvoice = Invoice::where('user_id', $request->user()->id)
-            ->orderBy('id', 'desc')
-            ->first();
+        $invoice = $this->invoiceService->createInvoice($request->user(), $request->validated());
         
-        $invoiceNumber = 'INV-' . str_pad((string)(($lastInvoice ? $lastInvoice->id : 0) + 1), 4, '0', STR_PAD_LEFT);
-
-        // Calculate totals
-        $subtotal = 0;
-        foreach ($validated['items'] as $item) {
-            $itemTotal = $item['quantity'] * $item['unit_price'];
-            $subtotal += $itemTotal;
-        }
-
-        $taxAmount = $subtotal * ($validated['tax_rate'] / 100);
-        $totalAmount = $subtotal + $taxAmount;
-
-        // Create invoice
-        $invoice = $request->user()->invoices()->create([
-            'client_id' => $validated['client_id'],
-            'project_id' => $validated['project_id'],
-            'invoice_number' => $invoiceNumber,
-            'issue_date' => $validated['issue_date'],
-            'due_date' => $validated['due_date'],
-            'subtotal' => $subtotal,
-            'tax_rate' => $validated['tax_rate'],
-            'tax_amount' => $taxAmount,
-            'total_amount' => $totalAmount,
-            'notes' => $validated['notes'],
-            'terms' => $validated['terms'],
-        ]);
-
-        // Create invoice items
-        foreach ($validated['items'] as $item) {
-            $invoice->items()->create([
-                'description' => $item['description'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'total_price' => $item['quantity'] * $item['unit_price'],
-            ]);
-        }
+        // Clear dashboard cache
+        $this->dashboardService->clearDashboardCache($request->user());
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Factuur succesvol aangemaakt.');
@@ -145,60 +103,12 @@ final class InvoiceController extends Controller
         ]);
     }
 
-    public function update(Request $request, Invoice $invoice): RedirectResponse
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice): RedirectResponse
     {
-        $this->authorize('update', $invoice);
-
-        $validated = $request->validate([
-            'client_id' => 'required|exists:clients,id',
-            'project_id' => 'nullable|exists:projects,id',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after:issue_date',
-            'status' => 'required|in:draft,sent,paid,overdue,cancelled',
-            'items' => 'required|array|min:1',
-            'items.*.description' => 'required|string|max:255',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'notes' => 'nullable|string',
-            'terms' => 'nullable|string',
-        ]);
-
-        // Calculate totals
-        $subtotal = 0;
-        foreach ($validated['items'] as $item) {
-            $itemTotal = $item['quantity'] * $item['unit_price'];
-            $subtotal += $itemTotal;
-        }
-
-        $taxAmount = $subtotal * ($validated['tax_rate'] / 100);
-        $totalAmount = $subtotal + $taxAmount;
-
-        // Update invoice
-        $invoice->update([
-            'client_id' => $validated['client_id'],
-            'project_id' => $validated['project_id'],
-            'issue_date' => $validated['issue_date'],
-            'due_date' => $validated['due_date'],
-            'status' => $validated['status'],
-            'subtotal' => $subtotal,
-            'tax_rate' => $validated['tax_rate'],
-            'tax_amount' => $taxAmount,
-            'total_amount' => $totalAmount,
-            'notes' => $validated['notes'],
-            'terms' => $validated['terms'],
-        ]);
-
-        // Update invoice items
-        $invoice->items()->delete();
-        foreach ($validated['items'] as $item) {
-            $invoice->items()->create([
-                'description' => $item['description'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
-                'total_price' => $item['quantity'] * $item['unit_price'],
-            ]);
-        }
+        $this->invoiceService->updateInvoice($invoice, $request->validated());
+        
+        // Clear dashboard cache
+        $this->dashboardService->clearDashboardCache($request->user());
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Factuur succesvol bijgewerkt.');

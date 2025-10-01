@@ -1,61 +1,399 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Zemen Financial Management
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive financial management platform for Habesha freelancers and professionals, built with Laravel, Vue.js (Inertia), and Tailwind CSS.
 
-## About Laravel
+## 🧭 Executive Overview / Vision
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Habesha Finance is designed to empower freelancers, entrepreneurs, and professionals from the Habesha community with world‑class financial tools. Inspired by cultural values of community, trust, and legacy, it bridges modern fintech standards with user‑friendly simplicity.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 👤 Personas & User Stories
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Freelancer (Sara, 28)**
+  - Needs to send invoices fast, track who paid, and manage tax deductions.
+  - “As a freelancer, I want to generate a professional invoice in < 1 minute so I look credible and get paid faster.”
 
-## Learning Laravel
+- **Small Business Owner (Yohannes, 40)**
+  - Requires project‑based invoicing, expense management, and team visibility.
+  - “As a business owner, I want a dashboard that shows expenses vs income, so I can make quick financial decisions.”
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **Consultant (Mimi, 35)**
+  - Wants multi‑language invoices, secure record keeping, and tax‑ready reports.
+  - “As a consultant, I want to send invoices in Amharic, Dutch, or English, so I can serve clients internationally.”
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🏗️ System Architecture (High‑level)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```text
++------------------------+        HTTPS        +--------------------+
+|        Browser         |  <---------------->  |   Laravel Router   |
+|  (Inertia + Vue 3)     |                     +---------+----------+
++-----------+------------+                               |
+            | Inertia responses (SSR/JSON page props)    |
+            v                                            v
++-----------+------------+                      +--------+---------+
+|   Inertia Adapter      |                      |  Controllers     |
+|   (inertia-laravel)    |                      |  + Policies      |
++-----------+------------+                      +--------+---------+
+            | Eloquent / Services                         |
+            v                                             v
++-----------+------------+                      +--------+---------+
+|     Services           |<-------------------->|   Models/ORM     |
+|  (Invoice/Dashboard/   |   Domain logic       | (Eloquent)       |
+|   Expense, etc.)       |                      +--------+---------+
++-----------+------------+                               |
+            |                                              
+            v                                              
++-----------+------------+                      +--------+---------+
+|   MySQL (RDBMS)        |<-- indexes -->       |   Redis (cache)  |
++------------------------+                      +------------------+
+            ^                                              |
+            | PDF/Email                                   |
+            |                                              v
+      +-----+------+                              +-------+-------+
+      |  DomPDF     |                              |  Audit Logs   |
+      |  Mailer     |----------------------------->| storage/logs  |
+      +------------ +                              +---------------+
+```
 
-## Laravel Sponsors
+## 🎨 Design Philosophy
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **Laravel + Vue**: full‑stack synergy for fast iteration and cohesive DX.
+- **Inertia**: SPA‑like UX zonder REST overhead; gedeelde validatie/sessies.
+- **Tailwind**: consistente, schaalbare design system met utility‑first aanpak.
+- **Service layer**: dunne controllers, duidelijke domeinlogica, testbaar.
 
-### Premium Partners
+## 🔒 Security & Compliance
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **GDPR readiness**: scheiding van data, audit trails, exporteerbaarheid.
+- **Encryption**: TLS in transit; database/volumes voorbereid op at‑rest encryptie (infra afhankelijk).
+- **RBAC**: policies per resource; uitbreidbaar naar rollen/permissions.
+- **Rate limiting**: middleware voor misbruikpreventie.
+- **2FA/MFA (roadmap)**: gepland via Laravel Fortify/Third‑party authenticator.
 
-## Contributing
+## 🔌 API (Future‑ready)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Planned versioned API voor integraties:
 
-## Code of Conduct
+```http
+POST /api/v1/invoices            # create invoice
+GET  /api/v1/invoices/{id}       # fetch invoice
+GET  /api/v1/clients/{id}        # fetch client
+GET  /api/v1/dashboard/stats     # summary metrics
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Authenticatie: **Bearer tokens (Sanctum personal access tokens)**, rate‑limited, JSON responses.
 
-## Security Vulnerabilities
+## 🚀 Features
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Core Functionality
+- **Invoice Management**: Create, edit, and track invoices with automatic calculations
+- **Client Management**: Organize and manage client information
+- **Project Tracking**: Monitor project progress and associate invoices
+- **Expense Tracking**: Record and categorize business expenses
+- **Payment Processing**: Track payments and outstanding amounts
+- **Financial Dashboard**: Real-time overview of business finances
 
-## License
+### Advisory Pillars
+- **Financial Planning**
+  Comprehensive wealth management strategies tailored to your unique financial goals and cultural values.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- **Investment Management**
+  Expert investment strategies that align with your risk tolerance and long-term financial objectives.
+
+- **Tax Optimization**
+  Strategic tax planning to minimize your tax burden while maximizing your wealth accumulation potential.
+
+- **Estate Planning**
+  Comprehensive estate planning to ensure your legacy is preserved and passed down according to your wishes.
+
+### Advanced Features
+- **Multi-language Support**: English, Dutch, and Amharic
+- **PDF Generation**: Professional invoice PDFs with company branding
+- **Email Integration**: Send invoices directly to clients
+- **Audit Logging**: Complete audit trail for financial operations
+- **Performance Optimization**: Cached dashboard statistics and database indexes
+- **Security Hardening**: Rate limiting and comprehensive validation
+
+## 🛠 Technology Stack
+
+### Backend
+- **Laravel 12**: PHP framework with modern features
+- **MySQL/PostgreSQL**: Robust database support
+- **Redis**: Caching and session storage
+- **Laravel Sanctum**: API authentication
+
+### Frontend
+- **Vue.js 3**: Modern reactive frontend
+- **Inertia.js**: SPA-like experience without API complexity
+- **Tailwind CSS**: Utility-first CSS framework
+- **Vite**: Fast build tool and development server
+
+### Additional Tools
+- **DomPDF**: PDF generation for invoices
+- **Laravel Breeze**: Authentication scaffolding
+- **PHPUnit**: Comprehensive testing suite
+
+## 📋 Requirements
+
+- PHP 8.2 or higher
+- Composer
+- Node.js 20.19+ (aanbevolen 22.12+) en npm
+- MySQL 8.0+ of PostgreSQL 13+
+- Redis (optioneel, voor caching)
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-username/habesha-finance-platform.git
+cd habesha-finance-platform
+```
+
+### 2. Install Dependencies
+```bash
+# Install PHP dependencies
+composer install
+
+# Install Node.js dependencies
+npm install
+```
+
+> Tip: gebruik nvm om Node 22 te installeren als Vite klaagt over Node-versie
+> ```bash
+> # macOS zsh
+> curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+> export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
+> nvm install 22.12.0 && nvm use 22.12.0
+> ```
+
+### 3. Environment Setup
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+
+### 5. Run Migrations
+```bash
+# Create database tables
+php artisan migrate
+
+# Seed initial data (optional)
+php artisan db:seed
+```
+
+### 6. Build & Run
+```bash
+# Development (Vite + Laravel)
+php artisan serve           # default http://127.0.0.1:8000
+npm run dev                 # Vite dev server (hot reload)
+
+# Production build
+npm run build
+```
+
+## 🧪 Testing
+
+The project includes comprehensive test coverage for all core functionality:
+
+```bash
+# Run all tests
+php artisan test
+
+# Run specific test suites
+php artisan test --testsuite=Feature
+php artisan test --testsuite=Unit
+
+# Run tests with coverage
+php artisan test --coverage
+```
+
+### Test Coverage
+- **Authentication**: Login, registration, password reset
+- **Invoice Management**: CRUD operations, calculations, PDF generation
+- **Expense Tracking**: CRUD operations, categorization
+- **Dashboard**: Statistics, caching, data isolation
+- **Security**: Authorization, validation, audit logging
+
+## 🔧 Configuration
+
+### Cache Configuration
+The application uses Redis for caching dashboard statistics:
+```env
+CACHE_STORE=redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+### Mail Configuration
+Configure email settings for invoice delivery:
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=your-smtp-host
+MAIL_PORT=587
+MAIL_USERNAME=your-email
+MAIL_PASSWORD=your-password
+MAIL_ENCRYPTION=tls
+```
+
+### Logging Configuration
+Audit logs are stored separately for compliance:
+```env
+LOG_AUDIT_DAYS=90
+```
+
+## 🏗 Architecture
+
+### Service Layer Pattern
+Business logic is extracted into service classes:
+- `DashboardService`: Handles dashboard statistics and caching
+- `InvoiceService`: Manages invoice calculations and operations
+- `ExpenseService`: Handles expense management logic
+
+### Form Request Validation
+Comprehensive validation using Laravel Form Requests:
+- `StoreInvoiceRequest`: Invoice creation validation
+- `UpdateInvoiceRequest`: Invoice update validation
+- `StoreExpenseRequest`: Expense creation validation
+
+### Security Middleware
+- `RateLimitMiddleware`: Prevents abuse with rate limiting
+- `AuditLogMiddleware`: Logs all financial operations
+
+## 📊 Performance Optimizations
+
+### Database Indexes
+Strategic indexes on frequently queried fields:
+- User-based queries (`user_id`, `status`)
+- Date-based queries (`due_date`, `expense_date`)
+- Foreign key relationships
+
+### Caching Strategy
+- Dashboard statistics cached for 5 minutes
+- Cache invalidation on data changes
+- Redis-based caching for production
+
+### Query Optimization
+- Eager loading relationships
+- Database aggregation queries
+- Reduced N+1 query problems
+
+## 🔒 Security Features
+
+### Authentication & Authorization
+- Laravel Sanctum for API authentication
+- Policy-based authorization
+- CSRF protection
+- Password hashing
+
+### Rate Limiting
+- 60 requests per minute per IP
+- Configurable limits for different endpoints
+- Graceful error handling
+
+### Audit Logging
+- Complete audit trail for financial operations
+- User activity tracking
+- IP address and user agent logging
+- 90-day log retention
+
+### Input Validation
+- Comprehensive form request validation
+- SQL injection prevention
+- XSS protection
+- File upload security
+
+## 🌍 Internationalization
+
+The platform supports multiple languages:
+- **English**: Default language
+- **Dutch**: Complete translation
+- **Amharic**: Ethiopian language support
+
+Language files are located in `lang/` directory with structured translations for all UI elements.
+
+## 📈 Monitoring & Logging
+
+### Application Logs
+- Standard Laravel logs in `storage/logs/laravel.log`
+- Daily log rotation
+- Configurable log levels
+
+### Audit Logs
+- Financial operations logged to `storage/logs/audit.log`
+- Structured JSON format
+- 90-day retention policy
+
+### Error Handling
+- Comprehensive error handling
+- User-friendly error messages
+- Detailed logging for debugging
+
+## 🚀 Deployment
+
+### Production Checklist
+- [ ] Set `APP_ENV=production`
+- [ ] Configure production database
+- [ ] Set up Redis for caching
+- [ ] Configure email settings
+- [ ] Set up SSL certificates
+- [ ] Configure web server (Nginx/Apache)
+- [ ] Set up monitoring and logging
+- [ ] Run `php artisan config:cache`
+- [ ] Run `php artisan route:cache`
+- [ ] Run `php artisan view:cache`
+
+### Docker Deployment
+```bash
+# Build production image
+docker build -t habesha-finance .
+
+# Run with docker-compose
+docker-compose up -d
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow PSR-12 coding standards
+- Write tests for new features
+- Update documentation
+- Use meaningful commit messages
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue on GitHub
+- Email: support@habeshafinance.com
+- Documentation: [docs.habeshafinance.com](https://docs.habeshafinance.com)
+
+## 🗺 Roadmap & Requirements
+
+### Upcoming Features
+- [ ] Recurring invoices
+- [ ] Advanced reporting
+- [ ] Mobile app
+- [ ] API for third-party integrations
+- [ ] Multi-currency support
+- [ ] Tax calculation automation
+- [ ] Client portal
+- [ ] Automated payment reminders
+
+Zie ook: [docs/Requirements.md](docs/Requirements.md) voor volledige requirements, user stories en prioriteiten.
+
+---
+
+**Built with ❤️ for the Habesha community**

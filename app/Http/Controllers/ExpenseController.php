@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
-use App\Models\Project;
+use App\Services\ExpenseService;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -16,44 +19,38 @@ final class ExpenseController extends Controller
 {
     use AuthorizesRequests;
 
+    public function __construct(
+        private readonly ExpenseService $expenseService,
+        private readonly DashboardService $dashboardService
+    ) {}
+
     public function index(Request $request): Response
     {
-        $expenses = Expense::where('user_id', $request->user()->id)
-            ->with('project')
-            ->orderBy('expense_date', 'desc')
-            ->paginate(15);
+        $filters = $request->only(['category', 'project_id', 'date_from', 'date_to', 'is_billable']);
+        $expenses = $this->expenseService->getExpensesForUser($request->user(), $filters);
 
         return Inertia::render('Expenses/Index', [
             'expenses' => $expenses,
+            'categories' => $this->expenseService->getExpenseCategories(),
         ]);
     }
 
     public function create(Request $request): Response
     {
-        $projects = Project::where('user_id', $request->user()->id)
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get();
+        $projects = $this->expenseService->getActiveProjectsForUser($request->user());
 
         return Inertia::render('Expenses/Create', [
             'projects' => $projects,
+            'categories' => $this->expenseService->getExpenseCategories(),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreExpenseRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'project_id' => 'nullable|exists:projects,id',
-            'description' => 'required|string|max:255',
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0.01',
-            'expense_date' => 'required|date',
-            'receipt_path' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'is_billable' => 'boolean',
-        ]);
-
-        $request->user()->expenses()->create($validated);
+        $this->expenseService->createExpense($request->user(), $request->validated());
+        
+        // Clear dashboard cache
+        $this->dashboardService->clearDashboardCache($request->user());
 
         return redirect()->route('expenses.index')
             ->with('success', 'Uitgave succesvol toegevoegd.');
@@ -74,33 +71,23 @@ final class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        $projects = Project::where('user_id', $expense->user_id)
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get();
+        $projects = $this->expenseService->getActiveProjectsForUser($expense->user);
 
         return Inertia::render('Expenses/Edit', [
             'expense' => $expense,
             'projects' => $projects,
+            'categories' => $this->expenseService->getExpenseCategories(),
         ]);
     }
 
-    public function update(Request $request, Expense $expense): RedirectResponse
+    public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
     {
         $this->authorize('update', $expense);
 
-        $validated = $request->validate([
-            'project_id' => 'nullable|exists:projects,id',
-            'description' => 'required|string|max:255',
-            'category' => 'required|string|max:100',
-            'amount' => 'required|numeric|min:0.01',
-            'expense_date' => 'required|date',
-            'receipt_path' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
-            'is_billable' => 'boolean',
-        ]);
-
-        $expense->update($validated);
+        $this->expenseService->updateExpense($expense, $request->validated());
+        
+        // Clear dashboard cache
+        $this->dashboardService->clearDashboardCache($request->user());
 
         return redirect()->route('expenses.index')
             ->with('success', 'Uitgave succesvol bijgewerkt.');
@@ -110,7 +97,10 @@ final class ExpenseController extends Controller
     {
         $this->authorize('delete', $expense);
 
-        $expense->delete();
+        $this->expenseService->deleteExpense($expense);
+        
+        // Clear dashboard cache
+        $this->dashboardService->clearDashboardCache($expense->user);
 
         return redirect()->route('expenses.index')
             ->with('success', 'Uitgave succesvol verwijderd.');
