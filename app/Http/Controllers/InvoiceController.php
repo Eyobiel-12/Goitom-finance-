@@ -18,6 +18,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Mail\InvoiceMail;
+use App\Mail\InvoiceReminderMail;
 use Illuminate\Support\Facades\Mail;
 
 final class InvoiceController extends Controller
@@ -152,5 +153,24 @@ final class InvoiceController extends Controller
 
                 return redirect()->route('invoices.show', $invoice)
                     ->with('success', 'Factuur succesvol per email verzonden naar ' . $invoice->client->email);
+            }
+
+            // New method for sending payment reminder
+            public function sendReminder(Request $request, Invoice $invoice)
+            {
+                $this->authorize('view', $invoice);
+
+                $validated = $request->validate([
+                    'message' => 'nullable|string|max:1000',
+                ]);
+
+                $invoice->load(['client', 'project', 'items', 'user']);
+
+                // Send reminder email
+                Mail::to($invoice->client->email)
+                    ->send(new InvoiceReminderMail($invoice, $validated['message'] ?? null));
+
+                return redirect()->route('invoices.show', $invoice)
+                    ->with('success', 'Betalingherinnering succesvol verzonden naar ' . $invoice->client->email);
             }
         }

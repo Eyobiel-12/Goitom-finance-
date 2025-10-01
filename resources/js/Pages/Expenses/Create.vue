@@ -1,6 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     projects: Array,
@@ -9,6 +11,7 @@ const props = defineProps({
 const form = useForm({
     project_id: null,
     description: '',
+    vendor: '',
     category: '',
     amount: '',
     expense_date: new Date().toISOString().split('T')[0],
@@ -27,6 +30,55 @@ const categories = [
     'Internet',
     'Overig'
 ];
+
+const suggestions = ref([]);
+const autoCategory = ref('');
+const isLoading = ref(false);
+
+// Simple debounce implementation
+const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
+// Debounced function to get category suggestions
+const getSuggestions = debounce(async () => {
+    if (!form.vendor || form.vendor.length < 2) {
+        suggestions.value = [];
+        autoCategory.value = '';
+        return;
+    }
+
+    isLoading.value = true;
+    try {
+        const response = await axios.post(route('expenses.suggest-category'), {
+            vendor: form.vendor,
+            description: form.description,
+        });
+        
+        suggestions.value = response.data.suggestions || [];
+        autoCategory.value = response.data.auto_category || '';
+        
+        // Auto-fill category if we have a suggestion and no category is set
+        if (autoCategory.value && !form.category) {
+            form.category = autoCategory.value;
+        }
+    } catch (error) {
+        console.error('Error getting suggestions:', error);
+    } finally {
+        isLoading.value = false;
+    }
+}, 500);
+
+// Watch for changes in vendor or description
+watch([() => form.vendor, () => form.description], getSuggestions);
 
 const submit = () => {
     form.post(route('expenses.store'));
@@ -54,8 +106,29 @@ const submit = () => {
                     <div class="p-6">
                         <form @submit.prevent="submit" class="space-y-6">
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <!-- Vendor -->
+                                <div>
+                                    <label for="vendor" class="block text-sm font-medium text-gray-700">
+                                        Leverancier/Verkoper
+                                    </label>
+                                    <input
+                                        id="vendor"
+                                        v-model="form.vendor"
+                                        type="text"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        :class="{ 'border-red-300': form.errors.vendor }"
+                                        placeholder="Bijv. Microsoft, Shell, AH..."
+                                    />
+                                    <div v-if="form.errors.vendor" class="mt-1 text-sm text-red-600">
+                                        {{ form.errors.vendor }}
+                                    </div>
+                                    <div v-if="isLoading" class="mt-1 text-sm text-blue-600">
+                                        🔍 Zoeken naar categorieën...
+                                    </div>
+                                </div>
+
                                 <!-- Description -->
-                                <div class="sm:col-span-2">
+                                <div>
                                     <label for="description" class="block text-sm font-medium text-gray-700">
                                         Beschrijving *
                                     </label>
@@ -76,6 +149,9 @@ const submit = () => {
                                 <div>
                                     <label for="category" class="block text-sm font-medium text-gray-700">
                                         Categorie *
+                                        <span v-if="autoCategory" class="text-green-600 text-xs ml-1">
+                                            (💡 Voorgesteld: {{ autoCategory }})
+                                        </span>
                                     </label>
                                     <select
                                         id="category"
@@ -91,6 +167,22 @@ const submit = () => {
                                     </select>
                                     <div v-if="form.errors.category" class="mt-1 text-sm text-red-600">
                                         {{ form.errors.category }}
+                                    </div>
+                                    
+                                    <!-- Suggestions -->
+                                    <div v-if="suggestions.length > 0" class="mt-2">
+                                        <p class="text-xs text-gray-500 mb-1">Voorgestelde categorieën:</p>
+                                        <div class="flex flex-wrap gap-1">
+                                            <button
+                                                v-for="suggestion in suggestions.slice(0, 3)"
+                                                :key="suggestion"
+                                                type="button"
+                                                @click="form.category = suggestion"
+                                                class="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-full cursor-pointer"
+                                            >
+                                                {{ suggestion }}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 

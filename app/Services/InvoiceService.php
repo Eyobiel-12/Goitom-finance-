@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 
 final class InvoiceService
 {
@@ -26,7 +27,7 @@ final class InvoiceService
                 'project_id' => $data['project_id'] ?? null,
                 'invoice_number' => $invoiceNumber,
                 'issue_date' => $data['issue_date'],
-                'due_date' => $data['due_date'],
+                'due_date' => $data['due_date'] ?? $this->defaultDueDate($data['issue_date']),
                 'subtotal' => $totals['subtotal'],
                 'tax_rate' => $data['tax_rate'],
                 'tax_amount' => $totals['tax_amount'],
@@ -73,13 +74,27 @@ final class InvoiceService
 
     private function generateInvoiceNumber(User $user): string
     {
-        $lastInvoice = Invoice::where('user_id', $user->id)
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        $nextNumber = ($lastInvoice ? $lastInvoice->id : 0) + 1;
-        
-        return 'INV-' . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
+        // Zoek laatste nummer op basis van invoice_number suffix
+        $prefix = (string) Config::get('billing.invoice_prefix', 'INV-');
+
+        $last = Invoice::where('user_id', $user->id)
+            ->where('invoice_number', 'like', $prefix.'%')
+            ->orderByDesc('id')
+            ->value('invoice_number');
+
+        $next = 1;
+        if (is_string($last)) {
+            $num = (int) preg_replace('/\D/', '', $last);
+            $next = max(1, $num + 1);
+        }
+
+        return $prefix . str_pad((string) $next, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function defaultDueDate(string $issueDate): string
+    {
+        $days = (int) Config::get('billing.invoice_due_days', 14);
+        return now()->parse($issueDate)->addDays($days)->toDateString();
     }
 
     private function calculateTotals(array $items, float $taxRate): array

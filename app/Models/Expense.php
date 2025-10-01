@@ -15,6 +15,7 @@ final class Expense extends Model
         'user_id',
         'project_id',
         'description',
+        'vendor',
         'category',
         'amount',
         'expense_date',

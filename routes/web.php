@@ -39,6 +39,7 @@ Route::get('/welcome', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/forecast', [DashboardController::class, 'forecast'])->name('dashboard.forecast');
     
     // Client routes
     Route::resource('clients', ClientController::class);
@@ -48,11 +49,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('invoices', InvoiceController::class);
         Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('invoices.pdf');
         Route::post('/invoices/{invoice}/email', [InvoiceController::class, 'email'])->name('invoices.email');
+        Route::post('/invoices/{invoice}/reminder', [InvoiceController::class, 'sendReminder'])->name('invoices.reminder');
     });
     
     // Expense routes with financial audit logging
     Route::middleware(['financial'])->group(function () {
         Route::resource('expenses', ExpenseController::class);
+        Route::post('/expenses/suggest-category', [ExpenseController::class, 'suggestCategory'])->name('expenses.suggest-category');
     });
     
     // Project routes

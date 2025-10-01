@@ -27,7 +27,7 @@ final class StoreInvoiceRequest extends FormRequest
             'client_id' => 'required|exists:clients,id',
             'project_id' => 'nullable|exists:projects,id',
             'issue_date' => 'required|date|before_or_equal:today',
-            'due_date' => 'required|date|after:issue_date',
+            'due_date' => 'nullable|date|after:issue_date',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:255',
             'items.*.quantity' => 'required|numeric|min:0.01',

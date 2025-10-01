@@ -8,6 +8,7 @@ use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Expense;
 use App\Services\ExpenseService;
+use App\Services\ExpenseCategorizationService;
 use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,7 @@ final class ExpenseController extends Controller
 
     public function __construct(
         private readonly ExpenseService $expenseService,
+        private readonly ExpenseCategorizationService $categorizationService,
         private readonly DashboardService $dashboardService
     ) {}
 
@@ -42,6 +44,29 @@ final class ExpenseController extends Controller
         return Inertia::render('Expenses/Create', [
             'projects' => $projects,
             'categories' => $this->expenseService->getExpenseCategories(),
+        ]);
+    }
+
+    public function suggestCategory(Request $request): Response
+    {
+        $request->validate([
+            'vendor' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $suggestions = $this->categorizationService->suggestCategory(
+            $request->user(),
+            $request->vendor,
+            $request->description
+        );
+
+        return response()->json([
+            'suggestions' => $suggestions,
+            'auto_category' => $this->categorizationService->categorizeExpense(
+                $request->user(),
+                $request->vendor,
+                $request->description
+            ),
         ]);
     }
 

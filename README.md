@@ -1,10 +1,10 @@
-# Zemen Financial Management
+# Goitom Finance — Financial Management for Habesha Freelancers
 
-A comprehensive financial management platform for Habesha freelancers and professionals, built with Laravel, Vue.js (Inertia), and Tailwind CSS.
+Modern financieel platform voor Habesha freelancers en ondernemers, gebouwd met Laravel 11+, Inertia/Vue 3 en Tailwind. Light/Dark/Auto thema, premium UI en focus op facturatie, uitgaven en rapportage.
 
 ## 🧭 Executive Overview / Vision
 
-Habesha Finance is designed to empower freelancers, entrepreneurs, and professionals from the Habesha community with world‑class financial tools. Inspired by cultural values of community, trust, and legacy, it bridges modern fintech standards with user‑friendly simplicity.
+Goitom Finance biedt world‑class tools met een culture‑first ervaring. Kernwaarden: eenvoud, betrouwbaarheid, meertaligheid, en snelle betalingen.
 
 ## 👤 Personas & User Stories
 
@@ -54,12 +54,15 @@ Habesha Finance is designed to empower freelancers, entrepreneurs, and professio
       +------------ +                              +---------------+
 ```
 
-## 🎨 Design Philosophy
+## 🎨 Design & UX
 
-- **Laravel + Vue**: full‑stack synergy for fast iteration and cohesive DX.
-- **Inertia**: SPA‑like UX zonder REST overhead; gedeelde validatie/sessies.
-- **Tailwind**: consistente, schaalbare design system met utility‑first aanpak.
-- **Service layer**: dunne controllers, duidelijke domeinlogica, testbaar.
+**Tokens & theming**
+- Class‑based dark mode (`dark:`) + ThemeToggle met `auto|light|dark` en persistente keuze.
+- Design tokens: brand/ink kleuren, `shadow-card/cardStrong`, radius xl.
+
+**UX patterns**
+- Glasachtige topbar/side bar, sticky sectiekoppen, focus‑visible ringen, skip‑link.
+- Actieve nav als “pill” met merkcontrast en chevron.
 
 ## 🔒 Security & Compliance
 
@@ -84,7 +87,7 @@ Authenticatie: **Bearer tokens (Sanctum personal access tokens)**, rate‑limite
 
 ## 🚀 Features
 
-### Core Functionality
+### Core (MVP)
 - **Invoice Management**: Create, edit, and track invoices with automatic calculations
 - **Client Management**: Organize and manage client information
 - **Project Tracking**: Monitor project progress and associate invoices
@@ -105,13 +108,17 @@ Authenticatie: **Bearer tokens (Sanctum personal access tokens)**, rate‑limite
 - **Estate Planning**
   Comprehensive estate planning to ensure your legacy is preserved and passed down according to your wishes.
 
-### Advanced Features
+### Advanced / V2+
 - **Multi-language Support**: English, Dutch, and Amharic
 - **PDF Generation**: Professional invoice PDFs with company branding
 - **Email Integration**: Send invoices directly to clients
 - **Audit Logging**: Complete audit trail for financial operations
 - **Performance Optimization**: Cached dashboard statistics and database indexes
 - **Security Hardening**: Rate limiting and comprehensive validation
+ - **Time Tracking** (urenregistratie) gelinkt aan projecten
+ - **Custom Invoice Fields**
+ - **Subscriptions/Recurring Invoices**
+ - **Digital Archive (Documents)**
 
 ## 🛠 Technology Stack
 
@@ -134,7 +141,7 @@ Authenticatie: **Bearer tokens (Sanctum personal access tokens)**, rate‑limite
 
 ## 📋 Requirements
 
-- PHP 8.2 or higher
+- PHP 8.3+
 - Composer
 - Node.js 20.19+ (aanbevolen 22.12+) en npm
 - MySQL 8.0+ of PostgreSQL 13+
@@ -187,7 +194,7 @@ php artisan db:seed
 ### 6. Build & Run
 ```bash
 # Development (Vite + Laravel)
-php artisan serve           # default http://127.0.0.1:8000
+php artisan serve --port=8010  # of vrij poort indien 8000 bezet
 npm run dev                 # Vite dev server (hot reload)
 
 # Production build
@@ -392,7 +399,7 @@ For support and questions:
 - [ ] Client portal
 - [ ] Automated payment reminders
 
-Zie ook: [docs/Requirements.md](docs/Requirements.md) voor volledige requirements, user stories en prioriteiten.
+Zie ook: `docs/Requirements.md` voor de volledige features, prioriteiten en roadmap.
 
 ---
 
