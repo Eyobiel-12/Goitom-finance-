@@ -25,6 +25,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
 
 // Admin OTP routes (passwordless login for Filament)
 Route::prefix('admin')->middleware('web')->group(function () {
+    // Override login page with OTP-only UI
+    Route::get('/login', function () {
+        return view('admin.otp-login');
+    })->name('filament.admin.auth.login');
+
     Route::post('/otp/send-login', [App\Http\Controllers\OtpController::class, 'sendLoginOtp'])
         ->name('admin.otp.send-login');
     Route::post('/otp/verify-login', function (\Illuminate\Http\Request $request) {

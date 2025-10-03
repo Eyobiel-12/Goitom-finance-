@@ -15,6 +15,7 @@ use App\Filament\Widgets\AdvancedStatsWidget;
 use App\Filament\Widgets\RevenueTrendWidget;
 use App\Filament\Widgets\InvoiceStatusChartWidget;
 use App\Filament\Widgets\BusinessMetricsWidget;
+use App\Filament\Widgets\QuickActionsWidget;
 use App\Http\Middleware\EnsureAdminRole;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -57,16 +58,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
                    ->widgets([
-                       SaaSOverviewWidget::class,
-                       AdvancedStatsWidget::class,
-                       BusinessMetricsWidget::class,
-                       GrowthChartWidget::class,
-                       RevenueTrendWidget::class,
-                       InvoiceStatusChartWidget::class,
-                       RevenueChartWidget::class,
-                       ExpenseChartWidget::class,
-                       UserActivityWidget::class,
-                       Widgets\AccountWidget::class,
+                       QuickActionsWidget::class,
+                       // Focused dashboard (minder prikkels, snelle context)
+                       SaaSOverviewWidget::class,            // 3-4 kern KPI's
+                       RevenueTrendWidget::class,            // 6m omzet trend
+                       InvoiceStatusChartWidget::class,      // status verdeling
+                       UserActivityWidget::class,            // recente activiteit
                    ])
             ->middleware([
                 EncryptCookies::class,

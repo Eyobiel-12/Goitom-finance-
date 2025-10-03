@@ -59,21 +59,35 @@ final class OtpAttemptResource extends Resource
                 ->form([
                     Forms\Components\TextInput::make('ip')->label('IP adres')
                 ])
-                ->query(fn($q, array $data) => $q->when($data['ip'] ?? null, fn($qq, $ip) => $qq->where('ip_address', 'like', "%$ip%"))),
+                ->query(function ($query, array $data) {
+                    if (!empty($data['ip'])) {
+                        $query->where('ip_address', 'like', '%'.$data['ip'].'%');
+                    }
+                    return $query;
+                }),
             Tables\Filters\Filter::make('agent')
                 ->form([
                     Forms\Components\TextInput::make('agent')->label('User-Agent')
                 ])
-                ->query(fn($q, array $data) => $q->when($data['agent'] ?? null, fn($qq, $ua) => $qq->where('user_agent', 'like', "%$ua%"))),
+                ->query(function ($query, array $data) {
+                    if (!empty($data['agent'])) {
+                        $query->where('user_agent', 'like', '%'.$data['agent'].'%');
+                    }
+                    return $query;
+                }),
             Filter::make('created_at_range')
                 ->form([
                     Forms\Components\DatePicker::make('from')->label('Vanaf'),
                     Forms\Components\DatePicker::make('until')->label('Tot'),
                 ])
                 ->query(function ($query, array $data) {
-                    return $query
-                        ->when($data['from'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '>=', $date))
-                        ->when($data['until'] ?? null, fn ($q, $date) => $q->whereDate('created_at', '<=', $date));
+                    if (!empty($data['from'])) {
+                        $query->whereDate('created_at', '>=', $data['from']);
+                    }
+                    if (!empty($data['until'])) {
+                        $query->whereDate('created_at', '<=', $data['until']);
+                    }
+                    return $query;
                 }),
         ])->bulkActions([
             BulkAction::make('exportCsv')

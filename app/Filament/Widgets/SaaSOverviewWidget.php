@@ -23,23 +23,29 @@ class SaaSOverviewWidget extends BaseWidget
         $newSignups = User::where('created_at', '>=', now()->subWeek())->count();
         $openTickets = SupportTicket::where('status', 'open')->count();
 
+        // Drempels
+        $mrrColor = $mrr >= 1000 ? 'success' : ($mrr >= 300 ? 'warning' : 'danger');
+        $activeColor = $activeUsers >= 10 ? 'success' : ($activeUsers >= 3 ? 'warning' : 'danger');
+        $signupColor = $newSignups >= 5 ? 'success' : ($newSignups >= 2 ? 'warning' : 'danger');
+        $ticketColor = $openTickets <= 2 ? 'success' : ($openTickets <= 5 ? 'warning' : 'danger');
+
         return [
             Stat::make('Actieve Gebruikers (30d)', $activeUsers)
                 ->description('Gebruikers actief deze maand')
                 ->descriptionIcon('heroicon-m-users')
-                ->color('success'),
+                ->color($activeColor),
             Stat::make('Maandelijkse Omzet', '€' . number_format($mrr, 2, ',', '.'))
                 ->description('Recurring Revenue deze maand')
                 ->descriptionIcon('heroicon-m-currency-euro')
-                ->color('primary'),
+                ->color($mrrColor),
             Stat::make('Nieuwe Aanmeldingen', $newSignups)
                 ->description('Deze week')
                 ->descriptionIcon('heroicon-m-user-plus')
-                ->color('info'),
+                ->color($signupColor),
             Stat::make('Open Support Tickets', $openTickets)
                 ->description('Wachten op behandeling')
                 ->descriptionIcon('heroicon-m-ticket')
-                ->color('warning'),
+                ->color($ticketColor),
         ];
     }
 }
