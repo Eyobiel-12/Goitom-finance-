@@ -24,6 +24,7 @@ final class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'business_name',
         'vat_number',
         'business_address',
@@ -80,5 +81,47 @@ final class User extends Authenticatable
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    /**
+     * Check if user has admin role
+     */
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'super_admin']);
+    }
+
+    /**
+     * Check if user has support role
+     */
+    public function isSupport(): bool
+    {
+        return in_array($this->role, ['support', 'admin', 'super_admin']);
+    }
+
+    /**
+     * Check if user is super admin
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Check if user can access admin panel
+     */
+    public function canAccessAdmin(): bool
+    {
+        return $this->isSupport();
+    }
+
+    public function canImpersonate(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        return $this->role !== 'super_admin';
     }
 }

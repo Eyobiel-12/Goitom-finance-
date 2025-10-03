@@ -15,6 +15,47 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Root: show landing to guests, redirect users to dashboard
+// Admin impersonation routes
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/impersonate/{user}', [App\Http\Controllers\ImpersonationController::class, 'impersonate'])
+        ->name('admin.impersonate');
+    Route::post('/stop-impersonation', [App\Http\Controllers\ImpersonationController::class, 'stopImpersonation'])
+        ->name('admin.stop-impersonation');
+});
+
+// Admin OTP routes (passwordless login for Filament)
+Route::prefix('admin')->middleware('web')->group(function () {
+    Route::post('/otp/send-login', [App\Http\Controllers\OtpController::class, 'sendLoginOtp'])
+        ->name('admin.otp.send-login');
+    Route::post('/otp/verify-login', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string|size:6',
+        ]);
+        $service = app(\App\Services\OtpService::class);
+        $result = $service->verifyLoginOtp($request->email, $request->code);
+        if (!($result['success'] ?? false)) {
+            return response()->json($result, 422);
+        }
+        // Login via Filament guard
+        \Filament\Facades\Filament::auth()->login($result['user']);
+        $request->session()->regenerate();
+        return response()->json([
+            'success' => true,
+            'redirect' => url('/admin'),
+        ]);
+    })->name('admin.otp.verify-login');
+});
+
+// OTP routes - moved inside web middleware group for CSRF protection
+Route::middleware('web')->group(function () {
+    Route::post('/otp/send-login', [App\Http\Controllers\OtpController::class, 'sendLoginOtp'])->name('otp.send-login');
+    Route::post('/otp/send-registration', [App\Http\Controllers\OtpController::class, 'sendRegistrationOtp'])->name('otp.send-registration');
+    Route::post('/otp/verify-login', [App\Http\Controllers\OtpController::class, 'verifyLoginOtp'])->name('otp.verify-login');
+    Route::post('/otp/verify-registration', [App\Http\Controllers\OtpController::class, 'verifyRegistrationOtp'])->name('otp.verify-registration');
+    Route::post('/otp/resend', [App\Http\Controllers\OtpController::class, 'resendOtp'])->name('otp.resend');
+});
+
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');

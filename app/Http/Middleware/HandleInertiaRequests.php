@@ -35,6 +35,13 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'csrf_token' => csrf_token(),
+            'impersonation' => [
+                'isImpersonating' => session()->has('impersonator_id'),
+                'impersonator' => session()->has('impersonator_id') 
+                    ? \App\Models\User::find(session()->get('impersonator_id'))
+                    : null,
+            ],
             'locale' => app()->getLocale(),
             'ziggy' => fn () => [
                 ...(new Ziggy)->toArray(),

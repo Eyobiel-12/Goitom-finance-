@@ -20,7 +20,11 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        $verifiedEmail = session('verified_email');
+        
+        return Inertia::render('Auth/Register', [
+            'verifiedEmail' => $verifiedEmail,
+        ]);
     }
 
     /**
@@ -30,21 +34,40 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $verifiedEmail = session('verified_email');
+        
+        if (!$verifiedEmail) {
+            return redirect()->route('register')->withErrors([
+                'email' => 'E-mailadres moet eerst geverifieerd worden.'
+            ]);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // Ensure the email matches the verified email
+        if ($request->email !== $verifiedEmail) {
+            return redirect()->route('register')->withErrors([
+                'email' => 'E-mailadres komt niet overeen met geverifieerd adres.'
+            ]);
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'user', // Default role
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
+
+        // Clear the verified email from session
+        $request->session()->forget('verified_email');
 
         return redirect(route('dashboard', absolute: false));
     }

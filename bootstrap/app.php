@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'rate.limit' => \App\Http\Middleware\RateLimitMiddleware::class,
             'audit.log' => \App\Http\Middleware\AuditLogMiddleware::class,
+            'admin' => \App\Http\Middleware\EnsureAdminRole::class,
         ]);
 
         // Apply rate limiting to sensitive routes

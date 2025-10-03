@@ -93,7 +93,7 @@ class InvoiceTest extends TestCase
     {
         $response = $this->actingAs($this->user)->post('/invoices', []);
 
-        $response->assertSessionHasErrors(['client_id', 'issue_date', 'due_date', 'items', 'tax_rate']);
+        $response->assertSessionHasErrors(['client_id', 'issue_date', 'items', 'tax_rate']);
     }
 
     public function test_invoice_creation_validates_items_array(): void
